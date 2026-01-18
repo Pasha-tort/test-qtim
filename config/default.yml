@@ -1,0 +1,10 @@
+app:
+  port: 3001
+
+jwt:
+  atSecret: supersecret
+  rtSecret: supersecret
+  rtTtlSeconds: 604800
+  atTtlSeconds: 900
+  atExp: 15min
+  rtExp: 7d

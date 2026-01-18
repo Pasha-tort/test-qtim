@@ -1,0 +1,71 @@
+version: "3.1"
+
+networks:
+  app-net:
+    driver: bridge
+
+volumes:
+  postgres-vol:
+    driver: local
+  redis-vol:
+    driver: local
+
+services:
+  api:
+    container_name: api
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    environment:
+      NODE_ENV: production
+    env_file:
+      - .env.runtime
+    ports:
+      - 3001:3001
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-net
+    restart: unless-stopped
+
+  db:
+    image: postgres:16.1-alpine
+    container_name: db
+    restart: always
+    volumes:
+      - postgres-vol:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      PGDATA: "/var/lib/postgresql/data/pgdata"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d postgres -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-net
+
+  redis:
+    image: redis:6-alpine
+    restart: always
+    volumes:
+      - redis-vol:/data:rw,z
+    ports:
+      - "6379:6379"
+    expose:
+      - 6379
+    command: ["redis-server", "--requirepass", "password"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "password", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+    networks:
+      - app-net
