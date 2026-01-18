@@ -26,5 +26,5 @@
       "@shared/cache-module": ["src/shared/cache-module"]
     }
   },
-  "exclude": ["dist"]
+  "exclude": ["dist", "test"]
 }
